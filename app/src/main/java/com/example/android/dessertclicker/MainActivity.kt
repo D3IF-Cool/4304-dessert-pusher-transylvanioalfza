@@ -33,19 +33,12 @@ class MainActivity : AppCompatActivity() {
     private var revenue = 0
     private var dessertsSold = 0
 
-    // Contains all the views
     private lateinit var binding: ActivityMainBinding
+    private lateinit var dessertTimer: DessertTimer
 
-    /** Dessert Data **/
 
-    /**
-     * Simple data class that represents a dessert. Includes the resource id integer associated with
-     * the image, the price it's sold for, and the startProductionAmount, which determines when
-     * the dessert starts to be produced.
-     */
     data class Dessert(val imageId: Int, val price: Int, val startProductionAmount: Int)
 
-    // Create a list of all desserts, in order of when they start being produced
     private val allDesserts = listOf(
             Dessert(R.drawable.cupcake, 5, 0),
             Dessert(R.drawable.donut, 10, 5),
@@ -69,63 +62,48 @@ class MainActivity : AppCompatActivity() {
 
 
 
-        // Use Data Binding to get reference to the views
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
 
         binding.dessertButton.setOnClickListener {
             onDessertClicked()
         }
 
-        // Set the TextViews to the right values
         binding.revenue = revenue
         binding.amountSold = dessertsSold
 
-        // Make sure the correct dessert is showing
+        dessertTimer = DessertTimer()
+
         binding.dessertButton.setImageResource(currentDessert.imageId)
     }
 
-    /**
-     * Updates the score when the dessert is clicked. Possibly shows a new dessert.
-     */
+
+
     private fun onDessertClicked() {
 
-        // Update the score
         revenue += currentDessert.price
         dessertsSold++
 
         binding.revenue = revenue
         binding.amountSold = dessertsSold
 
-        // Show the next dessert
         showCurrentDessert()
     }
 
-    /**
-     * Determine which dessert to show.
-     */
     private fun showCurrentDessert() {
         var newDessert = allDesserts[0]
         for (dessert in allDesserts) {
             if (dessertsSold >= dessert.startProductionAmount) {
                 newDessert = dessert
             }
-            // The list of desserts is sorted by startProductionAmount. As you sell more desserts,
-            // you'll start producing more expensive desserts as determined by startProductionAmount
-            // We know to break as soon as we see a dessert who's "startProductionAmount" is greater
-            // than the amount sold.
             else break
         }
 
-        // If the new dessert is actually different than the current dessert, update the image
         if (newDessert != currentDessert) {
             currentDessert = newDessert
             binding.dessertButton.setImageResource(newDessert.imageId)
         }
     }
 
-    /**
-     * Menu methods
-     */
     private fun onShare() {
         val shareIntent = ShareCompat.IntentBuilder.from(this)
                 .setText(getString(R.string.share_text, dessertsSold, revenue))
@@ -154,6 +132,7 @@ class MainActivity : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
         Timber.i("onStart Called")
+        dessertTimer.startTimer()
     }
 
     override fun onResume() {
@@ -164,10 +143,11 @@ class MainActivity : AppCompatActivity() {
         super.onPause()
         Timber.i("onPause Called")
     }
-    
+
     override fun onStop() {
         super.onStop()
         Timber.i("onStop Called")
+        dessertTimer.stopTimer()
     }
     override fun onDestroy() {
         super.onDestroy()
